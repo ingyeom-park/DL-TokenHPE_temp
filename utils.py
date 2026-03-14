@@ -9,17 +9,10 @@ import scipy.io as sio
 import cv2
 from math import cos, sin
 
+"""[데이터 읽기] 함수들"""
 
-# [데이터 읽기] 함수들
 
-"""
-get_ypr_from_mat | .mat → yaw/pitch/roll
-
-get_pt2d_from_mat 			| .mat → 랜드마크 좌표
-
-get_pose_params_from_mat 	| .mat → 전체 pose 파라미터
-"""
-
+# .mat → yaw/pitch/roll
 def get_ypr_from_mat(mat_path):
     # Get yaw, pitch, roll from .mat annotation.
     # They are in radians
@@ -30,12 +23,16 @@ def get_ypr_from_mat(mat_path):
     pose_params = pre_pose_params[:3]
     return pose_params
 
+
+# .mat → 랜드마크 좌표
 def get_pt2d_from_mat(mat_path):
     # Get 2D landmarks
     mat = sio.loadmat(mat_path)
     pt2d = mat['pt2d']
     return pt2d
 
+
+# .mat → 전체 pose 파라미터
 def get_pose_params_from_mat(mat_path):
     # This functions gets the pose parameters from the .mat
     # Annotations that come with the Pose_300W_LP dataset.
@@ -46,20 +43,10 @@ def get_pose_params_from_mat(mat_path):
     pose_params = pre_pose_params[:5]
     return pose_params
 
-"""
-[모델 내부의 핵심 수학] 함수들
+""" [모델 내부의 핵심 수학] 함수들 """
 
-get_R 						| yaw/pitch/roll → 3×3 회전행렬
 
-compute_rotation_matrix 	| 6D 벡터 → 3×3 회전행렬
-
-compute_euler_angles 		| 3×3 회전행렬 → yaw/pitch/roll
-
-normalize_vector 			| 벡터 정규화 (보조함수)
-
-cross_product 				| 두 벡터의 외적 (보조함수)
-"""
-
+# yaw/pitch/roll → 3×3 회전행렬
 def get_R(x,y,z):
     ''' Get rotation matrix from three rotation angles (radians). right-handed.
     Args:
@@ -83,6 +70,8 @@ def get_R(x,y,z):
     R = Rz.dot(Ry.dot(Rx))
     return R
 
+
+# 6D 벡터 → 3×3 회전행렬
 def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True):
     x_raw = poses[:,0:3]#batch*3
     y_raw = poses[:,3:6]#batch*3
@@ -98,6 +87,9 @@ def compute_rotation_matrix_from_ortho6d(poses, use_gpu=True):
     matrix = torch.cat((x,y,z), 2) #batch*3*3
     return matrix
 
+
+
+# 3×3 회전행렬 → yaw/pitch/roll
 def compute_euler_angles_from_rotation_matrices(rotation_matrices, use_gpu=True):
     
 	#input batch*4*4 or batch*3*3
@@ -128,6 +120,8 @@ def compute_euler_angles_from_rotation_matrices(rotation_matrices, use_gpu=True)
         
     return out_euler
 
+
+# 벡터 정규화 (보조함수)
 def normalize_vector( v, use_gpu=True):
     # batch*n
     batch=v.shape[0]
@@ -140,6 +134,8 @@ def normalize_vector( v, use_gpu=True):
     v = v/v_mag
     return v
 
+
+# 두 벡터의 외적 (보조함수)
 def cross_product(u, v):
     # u, v batch*n
     batch = u.shape[0]
@@ -153,13 +149,9 @@ def cross_product(u, v):
         
     return out
 
-"""
-[결과 확인용 시각화] 함수들
+""" [결과 확인용 시각화] 함수들 """
 
-draw_axis | 얼굴 위에 3D 축 그리기
-plot_pose_cube | 얼굴 위에 큐브 그리기
-"""
-
+# 얼굴 위에 3D 축 그리기
 def plot_pose_cube(img, yaw, pitch, roll, tdx=None, tdy=None, size=150.):
     # Input is a cv2 image
     # pose_params: (pitch, yaw, roll, tdx, tdy)
@@ -204,6 +196,7 @@ def plot_pose_cube(img, yaw, pitch, roll, tdx=None, tdy=None, size=150.):
 
     return img
 
+# 얼굴 위에 큐브 그리기
 def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 100):
 
     pitch = pitch * np.pi / 180
