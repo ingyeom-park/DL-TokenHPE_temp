@@ -1,0 +1,11 @@
+# 모델 가중치
+weights/
+
+# 입력 이미지
+input/
+
+# 결과물
+output/
+
+# 파이썬 캐시
+__pycache__/
